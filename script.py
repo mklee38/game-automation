@@ -20,9 +20,9 @@ import interception
 # ==================== 設定區 ====================
 KEY_UP = 'up'       # 向前跑
 KEY_RIGHT = 'right'   # 向右偏/連跳
-KEY_JUMP = 'ctrl'     # 跳躍鍵
+KEY_JUMP = 'c'     # 跳躍鍵
 
-delay_choices = [0.3, 0.4, 0.5, 0.6, 0.7]
+delay_choices = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
 
 # 全局控制變數，用於通知背景跳躍線程何時停止
 script_running = True
@@ -44,7 +44,7 @@ def random_jump_loop():
     while script_running:
         # 1. 隨機決定要等多久才跳 (例如: 1.5 到 4.0 秒之間隨機抽一個秒數)
         # 如果你想跳得更頻繁或更慢，可以修改這裡的數值
-        idle_delay = random.uniform(1.5, 4.0)
+        idle_delay = random.uniform(1.5, 4.0) 
         time.sleep(idle_delay)
         
         # 檢查主程式是否已經結束，避免在關閉後才觸發按鍵
@@ -56,7 +56,7 @@ def random_jump_loop():
         # 2. 執行跳躍動作
         interception.key_down(KEY_JUMP)
         # 從你的 5 個隨機數中抽一個作為按住按鍵的時間
-        time.sleep(random.choice(delay_choices)) 
+        time.sleep(random.choice([0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]))  # single or double jump
         interception.key_up(KEY_JUMP)
 
 def press_right_twice():
@@ -76,9 +76,9 @@ def press_right_twice():
 
 def main():
     global script_running
-    print("=" * 25)
-    print("開始自動操作 (含隨機跳躍)")
-    print("=" * 25)
+    
+    print("[開始自動操作 (含隨機跳躍)]")
+    
     print()
 
     # 自動聚焦遊戲視窗
@@ -107,57 +107,57 @@ def main():
     done_cycle_3 = False
     done_cycle_4 = False
 
-    try:
-        with interception.hold_key(KEY_UP):
-            print(f"[{time.strftime('%H:%M:%S')}] 【核心狀態】UP 鍵已死按住不放！")
+    #try:
+    with interception.hold_key(KEY_UP):
+        print(f"[{time.strftime('%H:%M:%S')}] 【核心狀態】UP 鍵已死按住不放！")
+        
+        while True:
+            elapsed = time.time() - start_time
             
-            while True:
-                elapsed = time.time() - start_time
-                
-                # ─── 條件 1：抵達第 80 秒，自動結束 ───
-                if elapsed >= 80.0:
-                    print(f"\n[{time.strftime('%H:%M:%S')}] ⏱ 滿 80 秒，腳本排程結束。")
-                    break
-                
-                # ─── 條件 2：第 2 秒 (原本 done_3s 與 done_2s 衝突已修正) ───
-                if 2.0 <= elapsed < 3.0 and not done_2s:
-                    print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 ---")
-                    press_right_twice()
-                    done_2s = True
-                
-                # ─── 條件 3：第 35 秒時觸發第 1 次循環 ───
-                if 35.0 <= elapsed < 36.0 and not done_cycle_1:
-                    print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 1 次循環開始) ---")
-                    press_right_twice()
-                    done_cycle_1 = True
-                
-                # ─── 條件 4：第 45 秒時觸發第 2 次循環 ───
-                if 45.0 <= elapsed < 46.0 and not done_cycle_2:
-                    print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 2 次循環開始) ---")
-                    press_right_twice()
-                    done_cycle_2 = True
-                
-                # ─── 條件 5：第 50 秒時觸發第 3 次循環 ───
-                if 50.0 <= elapsed < 51.0 and not done_cycle_3:
-                    print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 3 次循環開始) ---")
-                    press_right_twice()
-                    done_cycle_3 = True
+            # ─── 條件 1：抵達第 80 秒，自動結束 ───
+            if elapsed >= 80.0:
+                print(f"\n[{time.strftime('%H:%M:%S')}] ⏱ 滿 80 秒，腳本排程結束。")
+                break
+            
+            # ─── 條件 2：第 2 秒 (原本 done_3s 與 done_2s 衝突已修正) ───
+            if 2.0 <= elapsed < 3.0 and not done_2s:
+                print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 ---")
+                press_right_twice()
+                done_2s = True
+            
+            # ─── 條件 3：第 35 秒時觸發第 1 次循環 ───
+            if 35.0 <= elapsed < 36.0 and not done_cycle_1:
+                print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 1 次循環開始) ---")
+                press_right_twice()
+                done_cycle_1 = True
+            
+            # ─── 條件 4：第 45 秒時觸發第 2 次循環 ───
+            if 45.0 <= elapsed < 46.0 and not done_cycle_2:
+                print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 2 次循環開始) ---")
+                press_right_twice()
+                done_cycle_2 = True
+            
+            # ─── 條件 5：第 50 秒時觸發第 3 次循環 ───
+            if 50.0 <= elapsed < 51.0 and not done_cycle_3:
+                print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 3 次循環開始) ---")
+                press_right_twice()
+                done_cycle_3 = True
 
-                # ─── 條件 6：第 60 秒時觸發第 4 次循環 (原本誤寫成 done_cycle_3 已修正) ───
-                if 60.0 <= elapsed < 61.0 and not done_cycle_4:
-                    print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 4 次循環開始) ---")
-                    press_right_twice()
-                    done_cycle_4 = True
+            # ─── 條件 6：第 60 秒時觸發第 4 次循環 (原本誤寫成 done_cycle_3 已修正) ───
+            if 60.0 <= elapsed < 61.0 and not done_cycle_4:
+                print(f"--- 觸發點：已過去 {elapsed:.1f} 秒 (第 4 次循環開始) ---")
+                press_right_twice()
+                done_cycle_4 = True
 
-                # 每 0.05 秒檢查一次時間軸
-                time.sleep(0.05)
+            # 每 0.05 秒檢查一次時間軸
+            time.sleep(0.05)
 
-    except KeyboardInterrupt:
-        print("\n\n[偵測到 Ctrl+C] 正在強行中斷腳本並安全放開所有按鍵...")
-    finally:
-        # 通知跳躍線程停止運作
-        script_running = False
-        print("【系統訊息】所有內核按鍵已安全釋放，程式關閉。")
+    # except KeyboardInterrupt:
+    #     print("\n\n[偵測到 Ctrl+C] 正在強行中斷腳本並安全放開所有按鍵...")
+    # finally:
+    #     # 通知跳躍線程停止運作
+    #     script_running = False
+    #     print("【系統訊息】所有內核按鍵已安全釋放，程式關閉。")
 
 if __name__ == "__main__":
     try:

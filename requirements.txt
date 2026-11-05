@@ -2,6 +2,6 @@ pyautogui
 opencv-python
 numpy
 easyocr
-interception
+interception-python
 pygetwindow
 Pillow

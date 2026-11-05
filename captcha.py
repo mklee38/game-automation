@@ -22,7 +22,9 @@ TARGET_OFFSET_Y = 30
 TARGET_WIDTH    = 85
 TARGET_HEIGHT   = 58
 # =================================================================================
-GAME_WINDOW=(0, 0, 1280, 1000)
+GAME_WINDOW=(0, 0, 1280, 1000)      # None
+
+MAX_RETRIES = 3
 
 DIGIT_TEMPLATES = {
     '1': 'templates/one.png',
@@ -157,12 +159,9 @@ def click_at(pos, delay=0.3):
     return False
 
 
-def handle_captcha(max_retries=1):       # ------- Set the Retry number ------- 
-    print("" + "="*25)
-    print("偵測驗證碼視窗")
-    print("="*25)
+def handle_captcha(MAX_RETRIES):       
 
-    for attempt in range(1, max_retries + 1):
+    for attempt in range(1, MAX_RETRIES + 1):
         print(f"\n--- 第 {attempt} 次嘗試 ---")
 
         window_tl = find_template_topleft("templates/captcha_window.png", threshold=0.65)
@@ -227,6 +226,9 @@ def handle_captcha(max_retries=1):       # ------- Set the Retry number -------
 
 if __name__ == "__main__":
     try:
+        print("" + "="*25)
+        print("偵測驗證碼視窗")
+        print("="*25)
         handle_captcha()
     except KeyboardInterrupt:
         print("\n\n使用者中斷程式")

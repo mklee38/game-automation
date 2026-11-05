@@ -17,17 +17,20 @@ import os
 
 # ==================== 設定區 ====================
 # 匹配信心度（0.0~1.0），越高越嚴格，建議從 0.75 開始調
-CONFIDENCE = 0.65  #0.78     #0.7
+CONFIDENCE = 0.78  #0.78     #0.7
 
 # 模板圖片路徑
-#TEMPLATE_PATH = "templates/magic_book.png"
+PATH_1 = "templates/btn_cancel.png"
+PATH_2 = "templates/btn_no.png"
+PATH_3 = "templates/btn_close.png"
+PATH_4 = "templates/btn_confirm.png"
+PATH_5 = "templates/btn_cross.png"
 
 # 可選：限制搜尋區域（left, top, width, height），加速並減少誤判
-# 如果大廳縮圖位置固定，可以填入；否則設為 None 搜尋全螢幕
 SEARCH_REGION = None  # 例如：(100, 200, 800, 400)
 
 # 點擊後等待時間（秒），讓畫面有時間切換到等待室
-WAIT_AFTER_CLICK = 4
+WAIT_AFTER_CLICK = 1
 
 # ==================== 核心函數 ====================
 def find_template(template_path, confidence=CONFIDENCE, region=None, grayscale=False):     #confidence_region = (left, top, width, height)
@@ -86,66 +89,30 @@ def click(TEMPLATE_PATH):
     if found:
         print(f"[找到]信心度：{score:.3f}，點擊位置：{pos}，[{TEMPLATE_PATH}]")
         pyautogui.click(pos[0], pos[1])
+        print("已關閉彈出訊息!\n")
         return True
     else:
         print(f"[未找到]信心度：{score:.3f}（需要 ≥ {CONFIDENCE}），[{TEMPLATE_PATH}]")
         return False
 
-def handle_popups():
-    """
-    處理所有通知彈窗
-    回傳 True 表示有處理到東西
-    """
 
-    click("templates/btn_cancel.png")
-    click("templates/btn_no.png")
-    click("templates/btn_close.png")
-    click("templates/btn_confirm.png")
-
-
+def handle_popups(p1, p2, p3, p4, p5):
+    if click(p1) or click(p2) or click(p3) or click(p4) or click(p5):
+        #time.sleep(WAIT_AFTER_CLICK)
+        handle_popups(p1, p2, p3, p4, p5)
+    else:
+        return False
     
 
 # ==================== 主程式（測試用） ====================
 def main():
 
-    """ # 給你 3 秒時間切換到遊戲視窗
-    print("\n3 秒後開始搜尋...")
-    for i in range(3, 0, -1):
-        print(f"{i}...", end=" ", flush=True)
-        time.sleep(1)
-    print("\n開始！\n") """
-
     print("=" * 25)
     print("偵測通知")
     print("=" * 25)
- 
-    attempts = 0
-    #max_attempts = 10  # 最多嘗試次數，避免無限循環
-
-    #while attempts < max_attempts:
-    while True:
-        attempts += 1
-        print(f"\n--- 第 {attempts} 次嘗試 ---")
-
-        # TODO: 之後在這裡優先檢查驗證碼與彈窗
-        # if handle_captcha(): continue
-        # if handle_popups(): continue
-
-        if handle_popups():
-            print("\n已點擊！")
-            time.sleep(WAIT_AFTER_CLICK)
-            #break
-        else:
-            print("3 秒後重試...")
-            time.sleep(3)
-
-    # if attempts >= max_attempts:
-    #     print("\n達到最大嘗試次數，請檢查：")
-    #     print("1. 模板圖片是否正確")
-    #     print("2. 遊戲是否在大廳")
-    #     print("3. 信心度是否需要調整")
-    #     print("4. 搜尋區域是否設定錯誤")
-
+  
+    handle_popups(PATH_1, PATH_2, PATH_3, PATH_4, PATH_5)
+        
 
 if __name__ == "__main__":
     try:

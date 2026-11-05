@@ -24,7 +24,7 @@ install-interception.exe /install
 ## 下載所需Library
 
 ```
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 ## 遊戲視窗設定

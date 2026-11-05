@@ -9,22 +9,22 @@ import os
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
-TEMPLATE_PATH = "templates/magic_book.png"      # ------- Change your picture here ------- #
-SEARCH_REGION = (610, 580, 270, 170)            # None or（left, top, width, height）
+TEMPLATE_PATH = "templates/magic_book.png"      
+SEARCH_REGION = None#(610, 580, 270, 170)       # None
 
-# 等待室確認模板
-READY_TEMPLATE_PATH = "templates/ready.png"
-READY_SEARCH_REGION = (1000, 770, 290, 180)
+# 等待室確認模板（任一出現即確認進入等待室）
+READY_TEMPLATE_PATH_1 = "templates/ready.png"
+READY_SEARCH_REGION_1 = (1000, 770, 290, 180)     # None
+
+READY_TEMPLATE_PATH_2 = "templates/ready_extra.png"
+READY_SEARCH_REGION_2 = (40, 210, 80, 40)         # None
 
 # 點擊後等待時間（秒），讓畫面有時間切換到等待室
 WAIT_AFTER_CLICK = 2
 
 # ==================== 核心函數 ====================
 def find_template(template_path, confidence=CONFIDENCE, region=None, grayscale=False):     #confidence_region = (left, top, width, height)
-    """
-    在螢幕上尋找模板圖片
-    回傳：(找到與否, 中心座標 (x, y) 或 None, 最高信心度)
-    """
+   
     if not os.path.exists(template_path):
         print(f"[錯誤] 找不到模板檔案：{template_path}")
         return False, None, 0.0
@@ -49,15 +49,22 @@ def find_template(template_path, confidence=CONFIDENCE, region=None, grayscale=F
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)                  # 從比對結果中找出： (max_val：最高的相似度分數, max_loc：最高分數出現的位置（左上角座標）)
 
     if max_val >= confidence:
-        h, w = template.shape[:2]         #  template.shape，它會回傳一個包含三個數字的元組（Tuple），格式為：(Height, Width, Channels)。• 彩色圖片通常是 3（代表 B、G、R 三個顏色層）；如果是灰階圖片則只有 1。
-        center_x = max_loc[0] + w // 2    # max_loc = 「左上角」的座標 , // = Floor Division
-        center_y = max_loc[1] + h // 2
+        h, w = template.shape[:2]
+        
+        # 1. 先計算出在「截圖內部」的中心點
+        local_center_x = max_loc[0] + w // 2
+        local_center_y = max_loc[1] + h // 2
 
-        # 如果有指定 region，座標要加上偏移
-        if region:
-            center_x += region[0]
-            center_y += region[1]
+        # 2. 如果有指定範圍，加上螢幕絕對座標的偏移量；若為 None 則偏移量為 0
+        offset_x = region[0] if region else 0
+        offset_y = region[1] if region else 0
 
+        # 3. 計算出最終在螢幕上的絕對位置
+        center_x = local_center_x + offset_x
+        center_y = local_center_y + offset_y
+
+        print(f"[成功] 找到了 {os.path.basename(template_path)}！信心度：{max_val:.3f}，所在位置：{(center_x, center_y)}")
+        pyautogui.moveTo(center_x, center_y)
         return True, (center_x, center_y), max_val
     else:
         return False, None, max_val
@@ -84,24 +91,36 @@ def click_magic_book():
 
 def is_ready_in_waiting_room():
     """
-    檢查等待室是否已出現 ready.png
-    成功回傳 True
+    檢查等待室是否已出現 ready.png 或 ready_extra.png
+    任一模板出現即確認進入等待室，成功回傳 True
     """
-    found, pos, score = find_template(
-        READY_TEMPLATE_PATH,
+    # 檢查第一個模板：ready.png
+    found1, pos1, score1 = find_template(
+        READY_TEMPLATE_PATH_1,
         confidence=CONFIDENCE,
-        region=READY_SEARCH_REGION,
+        region=READY_SEARCH_REGION_1,
     )
-    if found:
-        print(f"[確認] 找到 ready.png！信心度：{score:.3f}，位置：{pos}")
+    if found1:
+        print(f"[確認] 找到 ready.png！信心度：{score1:.3f}，位置：{pos1}")
         return True
-    print(f"[未確認] ready.png 最高信心度：{score:.3f}（需要 ≥ {CONFIDENCE}）")
+
+    # 檢查第二個模板：ready_extra.png
+    found2, pos2, score2 = find_template(
+        READY_TEMPLATE_PATH_2,
+        confidence=CONFIDENCE,
+        region=READY_SEARCH_REGION_2,
+    )
+    if found2:
+        print(f"[確認] 找到 ready_extra.png！信心度：{score2:.3f}，位置：{pos2}")
+        return True
+
+    print(f"[未確認] ready.png 最高信心度：{score1:.3f}，ready_extra.png 最高信心度：{score2:.3f}（需要 ≥ {CONFIDENCE}）")
     return False
 
 
 def enter_waiting_room():
     """
-    持續點擊魔書，直到確認 ready.png 出現在等待室
+    持續點擊魔書，直到確認 ready.png 或 ready_extra.png 出現在等待室
     """
     attempts = 0
     while True:

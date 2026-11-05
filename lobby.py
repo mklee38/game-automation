@@ -8,8 +8,8 @@ import os
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
-TEMPLATE_PATH = "templates/lobby.png"   # ------- Change your picture here ------- #    
-SEARCH_REGION = (490, 30, 90, 40)      # None or（left, top, width, height）
+TEMPLATE_PATH = "templates/lobby.png"      
+SEARCH_REGION = (490, 30, 90, 40)           # None 
 
 # ==================== 核心函數 ====================
 def find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=SEARCH_REGION, grayscale=False):    

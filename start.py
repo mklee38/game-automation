@@ -8,15 +8,16 @@ import os
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
-TEMPLATE_PATH = "templates/start.png"      # ------- Change your picture here ------- #    
-SEARCH_REGION = (310, 400, 160, 160)       # None or（left, top, width, height）
+TEMPLATE_PATH_1 = "templates/start.png"         
+SEARCH_REGION_1 = (310, 400, 160, 160)             # None 
+
+TEMPLATE_PATH_2 = "templates/start_extra.png"      
+SEARCH_REGION_2 = (200, 900, 100, 60)              # None
+
 
 # ==================== 核心函數 ====================
-def find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=SEARCH_REGION, grayscale=False):    
-    """
-    在螢幕上尋找模板圖片
-    回傳：(找到與否, 中心座標 (x, y) 或 None, 最高信心度)
-    """
+def find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region = None, grayscale=False):    
+   
     if not os.path.exists(TEMPLATE_PATH):
         print(f"[錯誤] 找不到模板檔案：{TEMPLATE_PATH}")
         return False, None, 0.0
@@ -41,16 +42,21 @@ def find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=SEARCH_REGION, gr
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)                  # 從比對結果中找出： (max_val：最高的相似度分數, max_loc：最高分數出現的位置（左上角座標）)
 
     if max_val >= confidence:
-        h, w = template.shape[:2]         #  template.shape，它會回傳一個包含三個數字的元組（Tuple），格式為：(Height, Width, Channels)。• 彩色圖片通常是 3（代表 B、G、R 三個顏色層）；如果是灰階圖片則只有 1。
-        center_x = max_loc[0] + w // 2    # max_loc = 「左上角」的座標 , // = Floor Division
-        center_y = max_loc[1] + h // 2
+        h, w = template.shape[:2]
+        
+        # 1. 先計算出在「截圖內部」的中心點
+        local_center_x = max_loc[0] + w // 2
+        local_center_y = max_loc[1] + h // 2
 
-        # 如果有指定 region，座標要加上偏移
-        if region:
-            center_x += region[0]
-            center_y += region[1]
+        # 2. 如果有指定範圍，加上螢幕絕對座標的偏移量；若為 None 則偏移量為 0
+        offset_x = region[0] if region else 0
+        offset_y = region[1] if region else 0
 
-        print(f"[成功] 找到了！信心度：{max_val:.3f}，所在位置：{(center_x, center_y)}")
+        # 3. 計算出最終在螢幕上的絕對位置
+        center_x = local_center_x + offset_x
+        center_y = local_center_y + offset_y
+
+        print(f"[成功] 找到了{TEMPLATE_PATH}！信心度：{max_val:.3f}，所在位置：{(center_x, center_y)}")
         pyautogui.moveTo(center_x, center_y)
         return True      # True, (center_x, center_y), max_val
     else:
@@ -74,7 +80,7 @@ def main():
         print("\n開始！\n") """
     
     print("=" * 25)
-    print(f"開始搜尋[{TEMPLATE_PATH}]")
+    print(f"開始搜尋[{TEMPLATE_PATH_1} and {TEMPLATE_PATH_2}]")
     print("=" * 25)
     print()
 
@@ -90,7 +96,15 @@ def main():
         # if handle_captcha(): continue
         # if handle_popups(): continue
 
-        if find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=None, grayscale=False):
+        if find_template(
+            TEMPLATE_PATH_1, 
+            confidence=CONFIDENCE, 
+            region=SEARCH_REGION_1, 
+            grayscale=False) or find_template(
+                TEMPLATE_PATH_2, 
+                confidence=CONFIDENCE, 
+                region=SEARCH_REGION_2, 
+                grayscale=False):
             #print("判斷是否正確")
             break
         else:
