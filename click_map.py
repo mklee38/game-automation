@@ -4,13 +4,15 @@ import numpy as np
 import time
 import os
 
+import popups
+
 # ==================== 設定區 ====================
 # 匹配信心度（0.0~1.0），越高越嚴格，建議從 0.75 開始調
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
 TEMPLATE_PATH = "templates/magic_book.png"      
-SEARCH_REGION = None#(610, 580, 270, 170)       # None
+SEARCH_REGION =  (610, 580, 270, 170)       # None
 
 # 等待室確認模板（任一出現即確認進入等待室）
 READY_TEMPLATE_PATH_1 = "templates/ready.png"
@@ -75,13 +77,12 @@ def find_template(template_path, confidence=CONFIDENCE, region=None, grayscale=F
 
 def click_magic_book():
     """
-    尋找並點擊「魔書解密」縮圖
     成功回傳 True
     """
     found, pos, score = find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=SEARCH_REGION)
 
     if found:
-        print(f"[成功] 找到魔書解密入口！信心度：{score:.3f}，點擊位置：{pos}")
+        print(f"[成功] 找到地圖入口！信心度：{score:.3f}，點擊位置：{pos}")
         pyautogui.click(pos[0], pos[1])
         return True
     else:
@@ -120,7 +121,7 @@ def is_ready_in_waiting_room():
 
 def enter_waiting_room():
     """
-    持續點擊魔書，直到確認 ready.png 或 ready_extra.png 出現在等待室
+    持續點擊，直到確認 ready.png 或 ready_extra.png 出現在等待室
     """
     attempts = 0
     while True:
@@ -133,10 +134,12 @@ def enter_waiting_room():
             if is_ready_in_waiting_room():
                 print("已確認進入等待室。")
                 return True
-            print("尚未確認進入等待室，準備重新點擊魔書...")
+            print("尚未確認進入等待室，準備重新點擊地圖...")
+            popups.handle_popups                # can delete
         else:
             print("1 秒後重試...")
             time.sleep(1)
+            popups.handle_popups                # can delete
 
 
 # ==================== 主程式（測試用） ====================

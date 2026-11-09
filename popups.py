@@ -24,7 +24,9 @@ PATH_1 = "templates/btn_cancel.png"
 PATH_2 = "templates/btn_no.png"
 PATH_3 = "templates/btn_close.png"
 PATH_4 = "templates/btn_confirm.png"
-PATH_5 = "templates/btn_cross.png"
+PATH_5 = "templates/btn_allow.png"
+PATH_6 = "templates/btn_cross.png"
+
 
 # 可選：限制搜尋區域（left, top, width, height），加速並減少誤判
 SEARCH_REGION = None  # 例如：(100, 200, 800, 400)
@@ -80,10 +82,7 @@ def find_template(template_path, confidence=CONFIDENCE, region=None, grayscale=F
 # 第三個：這次比對最高的信心度分數
 
 def click(TEMPLATE_PATH):
-    """
-    尋找並點擊「魔書解密」縮圖
-    成功回傳 True
-    """
+   
     found, pos, score = find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=SEARCH_REGION)
 
     if found:
@@ -96,10 +95,10 @@ def click(TEMPLATE_PATH):
         return False
 
 
-def handle_popups(p1, p2, p3, p4, p5):
-    if click(p1) or click(p2) or click(p3) or click(p4) or click(p5):
+def handle_popups(p1, p2, p3, p4, p5, p6):
+    if click(p1) or click(p2) or click(p3) or click(p4) or click(p5) or click(p6):
         #time.sleep(WAIT_AFTER_CLICK)
-        handle_popups(p1, p2, p3, p4, p5)
+        handle_popups(p1, p2, p3, p4, p5, p6)
     else:
         return False
     
@@ -111,7 +110,7 @@ def main():
     print("偵測通知")
     print("=" * 25)
   
-    handle_popups(PATH_1, PATH_2, PATH_3, PATH_4, PATH_5)
+    handle_popups(PATH_1, PATH_2, PATH_3, PATH_4, PATH_5, PATH_6)
         
 
 if __name__ == "__main__":

@@ -17,10 +17,11 @@ pyautogui.FAILSAFE = True
 #print("EasyOCR 載入完成\n")
 
 # ==================== 請根據你的 captcha_window.png 修改這四個值 ====================
+# 根據使用者提供：2_digits.png 相對 captcha_window.png 左上 (158, 28)，右下 (245, 88)
 TARGET_OFFSET_X = 158
-TARGET_OFFSET_Y = 30
-TARGET_WIDTH    = 85
-TARGET_HEIGHT   = 58
+TARGET_OFFSET_Y = 28
+TARGET_WIDTH    = 87   # 245 - 158
+TARGET_HEIGHT   = 60   # 88 - 28
 # =================================================================================
 GAME_WINDOW=(0, 0, 1280, 1000)      # None
 
@@ -78,8 +79,43 @@ def preprocess_blue_noise_captcha(img_bgr):
     upscaled = cv2.resize(img_bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
     hsv = cv2.cvtColor(upscaled, cv2.COLOR_BGR2HSV)
     v_channel = hsv[:, :, 2]
-    denoised = cv2.fastNlMeansDenoising(v_channel, None, h=12)
+    denoised = cv2.fastNlMeansDenoising(v_channel, None, h=6)     # origin h = 12
     return denoised
+
+
+def ocr_single_half(half_bgr, reader, label, i):
+    """對單一半邊影像做 OCR，期望得到單一數字。同時輸出 debug 圖片。"""
+    
+    debug_dir = "debug_captcha"                        # 設定 debug 圖片輸出資料夾（會自動建立）
+    os.makedirs(debug_dir, exist_ok=True)
+
+    # 儲存原始半邊圖（方便除錯）
+    cv2.imwrite(os.path.join(debug_dir, f"debug_{label}_raw_{i}.png"), half_bgr)
+
+    denoised = preprocess_blue_noise_captcha(half_bgr)
+    # 儲存去噪後的半邊圖
+    cv2.imwrite(os.path.join(debug_dir, f"debug_{label}_denoised_{i}.png"), denoised)
+
+    try:
+        results = reader.readtext(denoised, detail=1, allowlist='0123456789', mag_ratio=1.5)
+        if not results:
+            print(f"    {label} 第{i}張: 無辨識結果")
+            return None
+
+        # 取信心最高的結果
+        best = max(results, key=lambda r: r[2])
+        text = best[1].strip()
+        conf = best[2]
+        print(f"    {label} 第{i}張: '{text}' (信心={conf:.2f})")
+
+        if len(text) == 1 and text.isdigit():
+            return text
+        else:
+            print(f"    {label} 結果長度不為 1 或非數字")
+            return None
+    except Exception as e:
+        print(f"    {label} 第{i}張 OCR 錯誤: {e}")
+        return None
 
 
 def ocr_from_relative_area(window_topleft):
@@ -91,55 +127,51 @@ def ocr_from_relative_area(window_topleft):
     top  = window_topleft[1] + TARGET_OFFSET_Y
 
     print(f"[裁切] 目標區域：({left}, {top}, {TARGET_WIDTH}x{TARGET_HEIGHT})")
-    print("[OCR] 最多擷取 3 張（前兩張相同即提早結束）")
+    print("[OCR] 最多擷取 5 張（前兩張相同即提早結束）")
+    print("[方法] 將兩位數區域平均切成左右兩半，分別辨識後再組合")
 
     predictions = []
 
-    for i in range(1, 4):
+    MAX_CAPTURES = 5          # ← capture number   (3)
+    CAPTURE_INTERVAL = 0.03   # ← capture interval in seconds   (0.06)
+
+    for i in range(1, MAX_CAPTURES + 1):       # 自訂擷取數目
         crop = pyautogui.screenshot(region=(left, top, TARGET_WIDTH, TARGET_HEIGHT))
         crop_cv = cv2.cvtColor(np.array(crop), cv2.COLOR_RGB2BGR)
 
-        # Save raw (optional, comment out if you want max speed)
-        #cv2.imwrite(f"debug_raw_{i}.png", crop_cv)                         # Screencapture!!! Comment out the cv2.imwrite lines if you want maximum speed.
+        # 可選：儲存完整裁切圖
+        # cv2.imwrite(f"debug_full_raw_{i}.png", crop_cv)
 
-        # Preprocess
-        denoised = preprocess_blue_noise_captcha(crop_cv)
-        #cv2.imwrite(f"debug_denoised_{i}.png", denoised)                   # Screencapture!!! Comment out the cv2.imwrite lines if you want maximum speed.
+        # 平均切分左右
+        mid = crop_cv.shape[1] // 2
+        left_half = crop_cv[:, :mid]
+        right_half = crop_cv[:, mid:]
 
-        # OCR + sort left-to-right
-        try:
-            results = reader.readtext(denoised, detail=1, allowlist='0123456789', mag_ratio=1.5)
+        left_digit = ocr_single_half(left_half, reader, "left", i)
+        right_digit = ocr_single_half(right_half, reader, "right", i)
 
-            def left_x(bbox):
-                return min(point[0] for point in bbox)
+        if left_digit and right_digit:
+            digits = left_digit + right_digit
+            predictions.append(digits)
+            print(f"  第{i}張組合結果: '{digits}'")
 
-            results_sorted = sorted(results, key=lambda r: left_x(r[0]))
-            texts = [r[1] for r in results_sorted]
-            digits = ''.join(texts).strip()
-            print(f"  第{i}張: {texts} → '{digits}'")
-
-            if len(digits) == 2 and digits.isdigit():
-                predictions.append(digits)
-
-                # Early exit: first two valid results are the same
-                if len(predictions) >= 2 and predictions[-1] == predictions[-2]:
-                    print("[提早結束] 前兩張結果相同，直接採用")
-                    break
-            else:
-                print("    無效，繼續")
-        except Exception as e:
-            print(f"  第{i}張 OCR 錯誤: {e}")
+            # Early exit: first two valid results are the same
+            if len(predictions) >= 2 and predictions[-1] == predictions[-2]:
+                print("[提早結束] 前兩張結果相同，直接採用")
+                break
+        else:
+            print("    無效（左右任一辨識失敗），繼續")
 
         # Shorter delay between captures
-        if i < 3:
-            time.sleep(0.06)
+        if i < MAX_CAPTURES:
+            time.sleep(CAPTURE_INTERVAL)
 
     if not predictions:
         print("[OCR 失敗] 沒有讀到有效兩位數")
         return None
 
     # If we broke early with two matching, just use it; otherwise vote
-    if len(predictions) >= 2 and predictions[0] == predictions[1]:
+    if len(predictions) >= 2 and predictions[0] == predictions[1]:             # break early
         best = predictions[0]
         print(f"[採用] {best}（前兩張一致）")
         return best
@@ -159,12 +191,14 @@ def click_at(pos, delay=0.3):
     return False
 
 
-def handle_captcha(MAX_RETRIES):       
+def handle_captcha(max_retries=None):
+    if max_retries is None:
+        max_retries = MAX_RETRIES     
 
     for attempt in range(1, MAX_RETRIES + 1):
         print(f"\n--- 第 {attempt} 次嘗試 ---")
 
-        window_tl = find_template_topleft("templates/captcha_window.png", threshold=0.65)
+        window_tl = find_template_topleft("templates/captcha_window.png", threshold=0.78)          # Set threshold
         if not window_tl:
             print("沒有偵測到驗證碼視窗")
             return False
@@ -184,16 +218,21 @@ def handle_captcha(MAX_RETRIES):
         print("="*25) 
 
         success = True
-        for d in target_digits:
+        for idx, d in enumerate(target_digits):
             if d not in DIGIT_TEMPLATES:
                 print(f"[錯誤] 缺少數字 {d} 的按鈕模板")
                 success = False
                 break
-            btn_pos = find_template_center(DIGIT_TEMPLATES[d], threshold=0.655)
+            btn_pos = find_template_center(DIGIT_TEMPLATES[d], threshold=0.655)        # Set threshold
             if not btn_pos or not click_at(btn_pos, delay=0.25):
                 print(f"[錯誤] 無法點擊數字 {d}")
                 success = False
                 break
+            # After clicking the first digit, move mouse away so it doesn't block the second button screenshot
+            if idx == 0 and len(target_digits) > 1:
+                print(f"[移動滑鼠] 移到空白處 (860, 20) 避免游標擋住按鈕")
+                pyautogui.moveTo(860, 20)
+                time.sleep(0.15)
 
         if not success:
             time.sleep(0.6)
@@ -203,17 +242,17 @@ def handle_captcha(MAX_RETRIES):
         print("="*25)
         time.sleep(1.2)  # reduced from 1.8
 
-        if find_template_topleft("templates/error_prompt.png", threshold=0.65):
+        if find_template_topleft("templates/error_prompt.png", threshold=0.65):                # Set threshold
             print("[結果] 出現錯誤提示")
-            confirm = find_template_center("templates/btn_confirm.png", threshold=0.65)
+            confirm = find_template_center("templates/btn_confirm.png", threshold=0.70)
             if confirm:
-                click_at(confirm, delay=0.3)
+                click_at(confirm, delay=1.0)                    # set this delay time
             else:
                 print("[警告] 找不到 btn_confirm.png")
             time.sleep(0.8)
             continue
 
-        if not find_template_topleft("templates/captcha_window.png", threshold=0.65):
+        if not find_template_topleft("templates/captcha_window.png", threshold=0.75):
             print("[成功] 驗證碼視窗已消失")
             return True
         else:
@@ -229,7 +268,7 @@ if __name__ == "__main__":
         print("" + "="*25)
         print("偵測驗證碼視窗")
         print("="*25)
-        handle_captcha()
+        handle_captcha(MAX_RETRIES)
     except KeyboardInterrupt:
         print("\n\n使用者中斷程式")
     except Exception as e:

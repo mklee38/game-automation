@@ -27,6 +27,15 @@ import script
 import lobby
 import popups
 
+import click_my_room
+import click_return
+
+import random
+
+# ===== 每 20 分鐘使用一次 Buff =====
+import time
+from use_buff import use_buff   # 請依你的檔案路徑調整
+
 pyautogui.FAILSAFE = True
 pyautogui.PAUSE = 0.05
 
@@ -53,12 +62,23 @@ pyautogui.PAUSE = 0.05
 
 
 def enter_map():
-    """執行 click_map 邏輯：持續點擊魔書，直到確認 ready.png 出現。"""
+    """執行 click_map 邏輯：持續點擊地圖，直到indicator出現。"""
     print("\n" + "=" * 40)
-    print("步驟 1：點擊魔書進入地圖（確認 ready.png）")
+    print("步驟 1：點擊圖標進入")
     print("=" * 40)
     click_map.enter_waiting_room()
 
+def enter_my_room():
+    print("\n" + "=" * 40)
+    print("[點擊圖標進入]")
+    print("=" * 40)
+    click_my_room.enter_room()
+
+def return_homepage():
+    print("\n" + "=" * 40)
+    print("[點擊圖標進入]")
+    print("=" * 40)
+    click_return.enter_room()
 
 def handle_captcha_once():
     """執行 captcha 邏輯（沒有驗證碼時會提早結束）。"""
@@ -123,19 +143,20 @@ def wait_for_lobby():
         if found:
             print("偵測到 lobby.png，已回到大廳。")
             return
-        print("1 秒後重試...")
-        time.sleep(1)
+        print("5 秒後重試...")
+        time.sleep(5)
 
 def handle_popups_once():
     """執行 popups 邏輯。"""
     print("\n" + "=" * 40)
-    print(f"{' '*6}<!偵測彈出訊息!>")
+    print(f"{' '*10}<!偵測彈出訊息!>")
     print("=" * 40)
     popups.handle_popups(popups.PATH_1, 
                          popups.PATH_2, 
                          popups.PATH_3, 
                          popups.PATH_4,
-                         popups.PATH_5)
+                         popups.PATH_5,
+                         popups.PATH_6)
 
 
 def main():
@@ -146,22 +167,61 @@ def main():
     # popup_proc = start_popups_separate_console()
 
     cycle = 0
+    
+    # ===== 每 20 分鐘使用一次 Buff =====
+    BUFF_INTERVAL = 20 * 60          # 20 分鐘（秒）
+    last_buff_time = 0               # 設成 0 讓程式一開始就先用一次 buff
+
     try:
         while True:
             cycle += 1
             print(f"[開始第 {cycle} 輪循環]")
             
             # Whole script logic start
-            handle_popups_once()            # 
+            handle_popups_once()            
             enter_map()                     # step 1                    
             handle_captcha_once()           # step 2
-            handle_popups_once()            #  
+            handle_popups_once()              
             wait_for_start()                # step 3
             run_race_script()               # step 4
             wait_for_lobby()                # step 5
 
-            print(f"\n第 {cycle} 輪完成，準備下一輪...")
+
+            
+
+            # ===== 每 20 分鐘使用一次 Buff ===== (唔想用就comment咗佢)
+            handle_popups_once()
+            enter_my_room()             
+            handle_popups_once()
+            
+            now = time.time()
+            if now - last_buff_time >= BUFF_INTERVAL:
+                print(f"[Buff] 已超過 {BUFF_INTERVAL//60} 分鐘，開始使用 Buff...")
+                success = use_buff()
+                if not success:
+                    print("[Buff] 使用失敗，程式結束")
+                    break
+                last_buff_time = time.time()
+                print("[Buff] 使用完成，計時重新開始")
+
+            handle_popups_once()
+            return_homepage()
             time.sleep(1)
+
+
+            # Go to myHome after each game
+            # time.sleep(random.uniform(2, 5))   # add some delay
+            
+            # handle_popups_once()
+            # enter_my_room()
+            # time.sleep(random.uniform(3, 5))   # add some delay
+
+            # handle_popups_once()
+            # return_homepage()
+            # time.sleep(random.uniform(3, 5))   # add some delay
+
+            # print(f"\n第 {cycle} 輪完成，準備下一輪...")
+            # time.sleep(1)
 
     except KeyboardInterrupt:
         print("\n\n[使用者中斷] 正在停止...")

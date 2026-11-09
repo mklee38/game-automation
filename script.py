@@ -22,7 +22,7 @@ KEY_UP = 'up'       # 向前跑
 KEY_RIGHT = 'right'   # 向右偏/連跳
 KEY_JUMP = 'c'     # 跳躍鍵
 
-delay_choices = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+#delay_choices = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
 
 # 全局控制變數，用於通知背景跳躍線程何時停止
 script_running = True
@@ -54,24 +54,38 @@ def random_jump_loop():
         print(f"[{time.strftime('%H:%M:%S')}] ➔ 🎲 觸發隨機跳躍 (CTRL)")
         
         # 2. 執行跳躍動作
-        interception.key_down(KEY_JUMP)
-        # 從你的 5 個隨機數中抽一個作為按住按鍵的時間
-        time.sleep(random.choice([0.03, 0.04, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]))  # single or double jump
-        interception.key_up(KEY_JUMP)
+        if random.choice([True, False]):
+            # single jump
+            interception.key_down(KEY_JUMP)
+            time.sleep(random.uniform(0.07, 0.12))  
+            interception.key_up(KEY_JUMP)
+
+        else:
+            # high dj jump
+            interception.key_down(KEY_JUMP)
+            time.sleep(random.uniform(0.07, 0.12))  
+            interception.key_up(KEY_JUMP)
+
+            time.sleep(random.uniform(0.05, 0.15))
+
+            interception.key_down(KEY_JUMP)
+            time.sleep(random.uniform(0.07, 0.12))  
+            interception.key_up(KEY_JUMP)
+
 
 def press_right_twice():
     """輔助函數：連按兩次右方向鍵"""
     print(f"[{time.strftime('%H:%M:%S')}] ➔ 執行：連按 2 次 RIGHT 鍵")
     
     # 每次點擊都重新抽籤隨機延遲，達到防偵測與人性化效果
-    interception.key_down(KEY_RIGHT)
-    time.sleep(random.choice(delay_choices))
+    interception.key_down(KEY_RIGHT) 
+    time.sleep(random.uniform(0.4,0.7))   #time.sleep(random.choice(delay_choices))
     interception.key_up(KEY_RIGHT)
     
-    time.sleep(random.choice(delay_choices)) # 兩次點擊之間的間隔
+    time.sleep(random.uniform(0.4,0.7))   #time.sleep(random.choice(delay_choices))
     
     interception.key_down(KEY_RIGHT)
-    time.sleep(random.choice(delay_choices))
+    time.sleep(random.uniform(0.4,0.7))   #time.sleep(random.choice(delay_choices))
     interception.key_up(KEY_RIGHT)
 
 def main():

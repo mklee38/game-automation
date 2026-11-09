@@ -65,13 +65,6 @@ def find_template(TEMPLATE_PATH, confidence=CONFIDENCE, region=SEARCH_REGION, gr
 # ==================== 主程式（測試用） ====================
 def main():
 
-    """ print("=" * 25)
-    # 給你 3 秒時間切換到遊戲視窗
-    print("3 秒後開始搜尋...")
-    for i in range(3, 0, -1):
-        print(f"{i}...", end=" ", flush=True)
-        time.sleep(1)
-    print("\n開始！\n") """
 
     print("=" * 25)
     print(f"開始搜尋[{TEMPLATE_PATH}]")
@@ -94,8 +87,8 @@ def main():
             #print("判斷是否正確")
             break
         else:
-            print("1 秒後重試...")
-            time.sleep(1)
+            print("5 秒後重試...")
+            time.sleep(5)
 
     #if attempts >= max_attempts:
     #    print("\n達到最大嘗試次數，請檢查!!!")
