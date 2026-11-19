@@ -11,11 +11,11 @@ import popups
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
-TEMPLATE_PATH = "templates/my_room.png"      
+TEMPLATE_PATH = "templates/goto_my_room/my_room.png"      
 SEARCH_REGION = (1050, 950, 70, 1000)       # None
 
 # 等待室確認模板（任一出現即確認進入等待室）
-INDICATOR_TEMPLATE_PATH_1 = "templates/my_room_indicator.png"
+INDICATOR_TEMPLATE_PATH_1 = "templates/goto_my_room/my_room_indicator.png"
 INDICATOR_SEARCH_REGION_1 = (0, 300, 130, 70)     # None
 
 # INDICATOR_TEMPLATE_PATH_2 = "templates/.png"

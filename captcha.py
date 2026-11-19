@@ -28,16 +28,16 @@ GAME_WINDOW=(0, 0, 1280, 1000)      # None
 MAX_RETRIES = 3
 
 DIGIT_TEMPLATES = {
-    '1': 'templates/one.png',
-    '2': 'templates/two.png',
-    '3': 'templates/three.png',
-    '4': 'templates/four.png',
-    '5': 'templates/five.png',
-    '6': 'templates/six.png',
-    '7': 'templates/seven.png',
-    '8': 'templates/eight.png',
-    '9': 'templates/nine.png',
-    '0': 'templates/zero.png',
+    '1': 'templates/captcha/one.png',
+    '2': 'templates/captcha/two.png',
+    '3': 'templates/captcha/three.png',
+    '4': 'templates/captcha/four.png',
+    '5': 'templates/captcha/five.png',
+    '6': 'templates/captcha/six.png',
+    '7': 'templates/captcha/seven.png',
+    '8': 'templates/captcha/eight.png',
+    '9': 'templates/captcha/nine.png',
+    '0': 'templates/captcha/zero.png',
 }
 
 def find_template_topleft(template_path, threshold=0.655, region=GAME_WINDOW):
@@ -198,7 +198,7 @@ def handle_captcha(max_retries=None):
     for attempt in range(1, MAX_RETRIES + 1):
         print(f"\n--- 第 {attempt} 次嘗試 ---")
 
-        window_tl = find_template_topleft("templates/captcha_window.png", threshold=0.78)          # Set threshold
+        window_tl = find_template_topleft("templates/captcha/captcha_window.png", threshold=0.78)          # Set threshold
         if not window_tl:
             print("沒有偵測到驗證碼視窗")
             return False
@@ -242,9 +242,9 @@ def handle_captcha(max_retries=None):
         print("="*25)
         time.sleep(1.2)  # reduced from 1.8
 
-        if find_template_topleft("templates/error_prompt.png", threshold=0.65):                # Set threshold
+        if find_template_topleft("templates/captcha/error_prompt.png", threshold=0.65):                # Set threshold
             print("[結果] 出現錯誤提示")
-            confirm = find_template_center("templates/btn_confirm.png", threshold=0.70)
+            confirm = find_template_center("templates/captcha/btn_confirm.png", threshold=0.70)
             if confirm:
                 click_at(confirm, delay=1.0)                    # set this delay time
             else:
@@ -252,7 +252,7 @@ def handle_captcha(max_retries=None):
             time.sleep(0.8)
             continue
 
-        if not find_template_topleft("templates/captcha_window.png", threshold=0.75):
+        if not find_template_topleft("templates/captcha/captcha_window.png", threshold=0.75):
             print("[成功] 驗證碼視窗已消失")
             return True
         else:

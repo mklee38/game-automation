@@ -11,15 +11,15 @@ import popups
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
-TEMPLATE_PATH = "templates/magic_book.png"      
-SEARCH_REGION =  (610, 580, 270, 170)       # None
+TEMPLATE_PATH = "templates/maps/MCJ_dance.png"      
+SEARCH_REGION =  (230, 360, 190, 280)                                     # None
 
 # 等待室確認模板（任一出現即確認進入等待室）
-READY_TEMPLATE_PATH_1 = "templates/ready.png"
-READY_SEARCH_REGION_1 = (1000, 770, 290, 180)     # None
+READY_TEMPLATE_PATH_1 = "templates/waiting_room/ready.png"
+READY_SEARCH_REGION_1 = (1000, 770, 290, 180)                             # None
 
-READY_TEMPLATE_PATH_2 = "templates/ready_extra.png"
-READY_SEARCH_REGION_2 = (40, 210, 80, 40)         # None
+READY_TEMPLATE_PATH_2 = "templates//waiting_room/ready_extra.png"
+READY_SEARCH_REGION_2 = (40, 210, 80, 40)                                 # None
 
 # 點擊後等待時間（秒），讓畫面有時間切換到等待室
 WAIT_AFTER_CLICK = 2
@@ -75,7 +75,7 @@ def find_template(template_path, confidence=CONFIDENCE, region=None, grayscale=F
 # 第二個：找到的話回傳中心座標 (x, y)，沒找到就回傳 None
 # 第三個：這次比對最高的信心度分數
 
-def click_magic_book():
+def click_map():
     """
     成功回傳 True
     """
@@ -128,7 +128,7 @@ def enter_waiting_room():
         attempts += 1
         print(f"\n--- click_map 第 {attempts} 次嘗試 ---")
 
-        if click_magic_book():
+        if click_map():
             print(f"已點擊！等待 {WAIT_AFTER_CLICK} 秒讓畫面切換...")
             time.sleep(WAIT_AFTER_CLICK)
             if is_ready_in_waiting_room():

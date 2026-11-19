@@ -5,7 +5,7 @@ Tales Runner 自動化主循環
 循環流程：
 1. click_map：持續點擊魔書直到成功進入地圖（確認 ready.png）
 2. captcha：立刻檢查驗證碼（沒有就提早結束）
-3. start：持續等待 start.png 出現（代表比賽開始）→ 再等 8 秒讓角色落地
+3. start：持續等待 start_MCJ.png 出現（代表比賽開始）→ 再等 8 秒讓角色落地
 4. script：執行 80 秒控制腳本（含背景隨機跳躍）
 5. lobby：持續等待 lobby.png 出現（代表回到大廳）
 6. 回到步驟 1
@@ -19,10 +19,12 @@ import subprocess
 import sys
 import os
 import pyautogui
+import interception
 
+import action_MCJ
 import click_map
 import captcha
-import start
+import start_MCJ
 import script
 import lobby
 import popups
@@ -89,7 +91,7 @@ def handle_captcha_once():
 
 
 def wait_for_start():
-    """執行 start 邏輯：直到偵測到 start.png，再等待 8 秒。"""
+    """執行 start 邏輯：直到偵測到 start_MCJ.png，再等待 8 秒。"""
     print("\n" + "=" * 40)
     print("步驟 3：等待比賽開始")
     print("=" * 40)
@@ -97,32 +99,36 @@ def wait_for_start():
     while True:
         attempts += 1
         print(f"--- start 第 {attempts} 次嘗試 ---")
-        found = start.find_template(
-            start.TEMPLATE_PATH_1,
-            confidence=start.CONFIDENCE,
-            region=start.SEARCH_REGION_1,
+        found = start_MCJ.find_template(
+            start_MCJ.TEMPLATE_PATH_1,
+            confidence=start_MCJ.CONFIDENCE,
+            region=start_MCJ.SEARCH_REGION_1,
             grayscale=False,
-        ) or start.find_template(
-            start.TEMPLATE_PATH_2,
-            confidence=start.CONFIDENCE,
-            region=start.SEARCH_REGION_2,
+        ) or start_MCJ.find_template(
+            start_MCJ.TEMPLATE_PATH_2,
+            confidence=start_MCJ.CONFIDENCE,
+            region=start_MCJ.SEARCH_REGION_2,
             grayscale=False,
         )
         if found:
             print("比賽即將開始！")
-            print("等待 8 秒確保角色落地...")
-            time.sleep(8)
+            # print("等待 8 秒確保角色落地...")
+            # time.sleep(8)
             return
         print("1 秒後重試...")
         time.sleep(1)
 
 
+
 def run_race_script():
-    """執行 script.py 的 80 秒控制（內含背景隨機跳躍）。"""
+    
     print("\n" + "=" * 40)
-    print("步驟 4：執行比賽控制腳本（含隨機跳躍）")
+    print("步驟 4：執行比賽控制腳本")
     print("=" * 40)
-    script.main()
+    action_MCJ.main()
+     
+    
+    # script.main()
 
 
 def wait_for_lobby():
@@ -164,6 +170,11 @@ def main():
     print("啟動: 自動化系統 (按 Ctrl+C 可隨時中斷)")
     print("#" * 40)
 
+    # ===== 只在程式最開始初始化 interception 一次 =====
+    print("初始化 interception...")
+    interception.auto_capture_devices()
+    print("interception 初始化完成")
+
     # popup_proc = start_popups_separate_console()
 
     cycle = 0
@@ -175,7 +186,7 @@ def main():
     try:
         while True:
             cycle += 1
-            print(f"[開始第 {cycle} 輪循環]")
+            print(f"\n\n[開始第 {cycle} 輪循環]")
             
             # Whole script logic start
             handle_popups_once()            
@@ -189,7 +200,7 @@ def main():
 
             
 
-            # ===== 每 20 分鐘使用一次 Buff ===== (唔想用就comment咗佢)
+            """ # ===== 每 20 分鐘使用一次 Buff ===== (唔想用就comment咗佢)
             handle_popups_once()
             enter_my_room()             
             handle_popups_once()
@@ -206,7 +217,7 @@ def main():
 
             handle_popups_once()
             return_homepage()
-            time.sleep(1)
+            time.sleep(1)  """
 
 
             # Go to myHome after each game

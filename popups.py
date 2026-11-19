@@ -20,12 +20,12 @@ import os
 CONFIDENCE = 0.78  #0.78     #0.7
 
 # 模板圖片路徑
-PATH_1 = "templates/btn_cancel.png"
-PATH_2 = "templates/btn_no.png"
-PATH_3 = "templates/btn_close.png"
-PATH_4 = "templates/btn_confirm.png"
-PATH_5 = "templates/btn_allow.png"
-PATH_6 = "templates/btn_cross.png"
+PATH_1 = "templates/popups/btn_cancel.png"
+PATH_2 = "templates/popups/btn_no.png"
+PATH_3 = "templates/popups/btn_close.png"
+PATH_4 = "templates/popups/btn_confirm.png"
+PATH_5 = "templates/popups/btn_allow.png"
+PATH_6 = "templates/popups/btn_cross.png"
 
 
 # 可選：限制搜尋區域（left, top, width, height），加速並減少誤判

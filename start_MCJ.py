@@ -8,11 +8,11 @@ import os
 CONFIDENCE = 0.78
 
 # 模板圖片路徑
-TEMPLATE_PATH_1 = "templates/start.png"         
-SEARCH_REGION_1 = (310, 400, 160, 160)             # None 
+TEMPLATE_PATH_1 = "templates/game_start/MCJ_start.png"         
+SEARCH_REGION_1 = (0, 150, 60, 40)           # None 
 
-TEMPLATE_PATH_2 = "templates/start_extra.png"      
-SEARCH_REGION_2 = (200, 900, 100, 60)              # None
+TEMPLATE_PATH_2 = "templates/game_start/MCJ_start_extra.png"      
+SEARCH_REGION_2 = (660, 100, 190, 280)              # None
 
 
 # ==================== 核心函數 ====================
