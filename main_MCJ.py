@@ -32,6 +32,8 @@ import popups
 import click_my_room
 import click_return
 
+import farm   # 你的 farm.py
+
 import random
 
 # ===== 每 20 分鐘使用一次 Buff =====
@@ -91,39 +93,31 @@ def handle_captcha_once():
 
 
 def wait_for_start():
-    """執行 start 邏輯：直到偵測到 start_MCJ.png，再等待 8 秒。"""
+    """執行 start 邏輯：直到偵測到 start，或逾時後重新進入等待室。"""
     print("\n" + "=" * 40)
     print("步驟 3：等待比賽開始")
     print("=" * 40)
-    attempts = 0
+
     while True:
-        attempts += 1
-        print(f"--- start 第 {attempts} 次嘗試 ---")
-        found = start_MCJ.find_template(
-            start_MCJ.TEMPLATE_PATH_1,
-            confidence=start_MCJ.CONFIDENCE,
-            region=start_MCJ.SEARCH_REGION_1,
-            grayscale=False,
-        ) or start_MCJ.find_template(
-            start_MCJ.TEMPLATE_PATH_2,
-            confidence=start_MCJ.CONFIDENCE,
-            region=start_MCJ.SEARCH_REGION_2,
-            grayscale=False,
-        )
-        if found:
+        success = start_MCJ.wait_for_start_with_timeout()
+        if success:
             print("比賽即將開始！")
             # print("等待 8 秒確保角色落地...")
             # time.sleep(8)
             return
-        print("1 秒後重試...")
-        time.sleep(1)
+        else:
+            print("逾時未偵測到開始指示，重新執行 click_map 進入等待室...")
+            enter_map()
+            handle_captcha_once()
+            handle_popups_once()
+
 
 
 
 def run_race_script():
     
     print("\n" + "=" * 40)
-    print("步驟 4：執行比賽控制腳本")
+    print("步驟 4：執行比賽控制腳本（含隨機跳躍）")
     print("=" * 40)
     action_MCJ.main()
      
@@ -183,6 +177,10 @@ def main():
     BUFF_INTERVAL = 20 * 60          # 20 分鐘（秒）
     last_buff_time = 0               # 設成 0 讓程式一開始就先用一次 buff
 
+    # ===== 每 30 分鐘去一次農場 =====
+    FARM_INTERVAL = 30 * 60 * 0.8          # 30 分鐘（秒）
+    last_farm_time = 0               # 設成 0 → 第一次回到大廳就會去農場
+
     try:
         while True:
             cycle += 1
@@ -196,6 +194,18 @@ def main():
             wait_for_start()                # step 3
             run_race_script()               # step 4
             wait_for_lobby()                # step 5
+
+
+            # ===== 每 30 分鐘執行一次農場 =====
+            now = time.time()
+            if now - last_farm_time >= FARM_INTERVAL:
+                print(f"\n[Farm] 已超過 {FARM_INTERVAL//60} 分鐘，開始執行農場腳本...")
+                farm.main()
+                last_farm_time = time.time()
+                print("[Farm] 農場完成，計時重新開始")
+            else:
+                remaining = int(FARM_INTERVAL - (now - last_farm_time))
+                print(f"[Farm] 距離下次農場還有 {remaining//60} 分 {remaining%60} 秒，繼續下一局遊戲")
 
 
             
