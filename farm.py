@@ -160,9 +160,28 @@ def main():
         print("沒有作物管理介面，跳過收成。")
     handle_all_popups()
 
+    # ---------- 跑online bug ----------
+    click_until_found(PATH_HOMEPAGE, "回到首頁")
+    click_popup_until_found(PATH_BTN_YES, "確認離開")
+    handle_all_popups()
+
+    print("\n[Step 1] 從大廳進入農場")
+    if not click_until_found(PATH_GOTO_FARM, "進入農場"):
+        print("無法進入農場，腳本結束。")
+        return
+    click_popup_until_found(PATH_BTN_YES, "確認進入 (btn_yes)")
+    handle_all_popups()
+
+    print("\n[Step 2] 進入我的農田")
+    click_until_found(PATH_GOTO_MY_FARM, "進入我的農田")
+    print(f"等待農田載入 {WAIT_LOAD} 秒...")
+    time.sleep(WAIT_LOAD)
+    handle_all_popups()
+
     # ---------- Step 6~12：購買並種植 ----------
     print("\n[Step 6-12] 購買並種植草莓田")
     click_until_found(PATH_FARM_STORE, "打開農場商店")
+    handle_all_popups()
     click_until_found(PATH_FIELD_CAT, "田地分類")
 
     print("開始種植 25 塊草莓田...")
@@ -171,6 +190,8 @@ def main():
         click_until_found(PATH_STRAWBERRY, "草莓田")
         click_grid_with_delay(PATH_FARM_GRIDS)
 
+    handle_all_popups()
+    
     click_until_found(PATH_BUY_ALL, "全部購買")
     click_until_found(PATH_BUY, "購買")
     click_popup_until_found(PATH_BTN_YES, "確認1")

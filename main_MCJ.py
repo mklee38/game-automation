@@ -160,26 +160,37 @@ def handle_popups_once():
 
 
 def main():
+
+    # ===== 每 20 分鐘使用一次 Buff =====
+    BUFF_INTERVAL = 20 * 60          # 20 分鐘（秒）
+    last_buff_time = 0               # 設成 0 讓程式一開始就先用一次 buff
+
+    # ===== 每 24 分鐘去一次農場 =====
+    FARM_INTERVAL = 24 * 60          # 24 分鐘（秒）
+    last_farm_time = time.time()     # 從現在開始計時 → 第一次不會立刻去農場
+
+
     print("#" * 40)
     print("啟動: 自動化系統 (按 Ctrl+C 可隨時中斷)")
     print("#" * 40)
+
 
     # ===== 只在程式最開始初始化 interception 一次 =====
     print("初始化 interception...")
     interception.auto_capture_devices()
     print("interception 初始化完成")
-
     # popup_proc = start_popups_separate_console()
 
-    cycle = 0
-    
-    # ===== 每 20 分鐘使用一次 Buff =====
-    BUFF_INTERVAL = 20 * 60          # 20 分鐘（秒）
-    last_buff_time = 0               # 設成 0 讓程式一開始就先用一次 buff
+   
+    # ===== 程式一開始先去一次農場種植 =====
+    print("\n" + "#" * 40)
+    print("程式啟動：先前往農場種植作物")
+    print("#" * 40)
+    farm.main()
+    last_farm_time = time.time()     # 計時從第一次農場完成後開始
+    print("[Farm] 初次農場完成，24 分鐘計時開始")
 
-    # ===== 每 30 分鐘去一次農場 =====
-    FARM_INTERVAL = 30 * 60 * 0.8          # 30 分鐘（秒）
-    last_farm_time = 0               # 設成 0 → 第一次回到大廳就會去農場
+    cycle = 0
 
     try:
         while True:
@@ -196,16 +207,20 @@ def main():
             wait_for_lobby()                # step 5
 
 
-            # ===== 每 30 分鐘執行一次農場 =====
+            # ===== 每 24 分鐘執行一次農場 =====
             now = time.time()
-            if now - last_farm_time >= FARM_INTERVAL:
+            elapsed = now - last_farm_time
+            remaining = int(FARM_INTERVAL - elapsed)
+
+            if remaining <= 0:
                 print(f"\n[Farm] 已超過 {FARM_INTERVAL//60} 分鐘，開始執行農場腳本...")
                 farm.main()
-                last_farm_time = time.time()
-                print("[Farm] 農場完成，計時重新開始")
+                last_farm_time = time.time()          # 計時從「農場完成」後重新開始
+                print("[Farm] 農場完成，24 分鐘計時重新開始")
             else:
-                remaining = int(FARM_INTERVAL - (now - last_farm_time))
-                print(f"[Farm] 距離下次農場還有 {remaining//60} 分 {remaining%60} 秒，繼續下一局遊戲")
+                mins = remaining // 60
+                secs = remaining % 60
+                print(f"[Farm] 距離下次農場還有 {mins:02d} 分 {secs:02d} 秒，繼續下一局遊戲")
 
 
             
